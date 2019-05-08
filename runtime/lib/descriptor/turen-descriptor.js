@@ -105,6 +105,38 @@ Object.assign(TurenDescriptor.prototype,
       fn: function getEnabled () {
         return Promise.resolve(this._runtime.component.turen.enabled)
       }
+    },
+    /**
+    * setup flag to excute poweroff after 30 minutes
+    * 
+    * @memberof yodaRT.activity.Activity.TurenClient
+    * @instance
+    * @function setPowerOffFlag
+    * @param {string} [voicedirective] - whether media is paly or not
+    * @param {string} [mediadirective]
+    * @param {string} [cardtype]
+    * @returns {Promise<boolean>}
+    */
+    setPowerOffFlag: {
+      type: 'method',
+      returns: 'promise',
+      fn: function setPowerOffFlag (voicedirective, mediadirective, cardtype) {
+        return this._runtime.setPowerOffFlag(voicedirective, mediadirective, cardtype)
+      }
+    },
+    /**
+    * getPlayState
+    * @memberof yodaRT.activity.Activity.TurenClient
+    * @instance
+    * @function getPlayState
+    * @returns {Promise<boolean>}
+    */
+   getPlayState: {
+    type: 'method',
+    returns: 'promise',
+    fn: function getPlayState () {
+      return this._runtime.getPlayState()
     }
+  }
   }
 )

@@ -23,6 +23,7 @@ function Skill (exe, nlp, action) {
   this.handleEvent()
   this.transform(action.response.action.directives || [])
   this.playerCtlData = {}
+  this.key_164_pause = false  
 }
 inherits(Skill, EventEmitter)
 

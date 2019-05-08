@@ -12,6 +12,7 @@ var fs = require('fs')
 var childProcess = require('child_process')
 
 var logger = require('logger')('yoda')
+var mylogger = require('logger')('chenj-debug')
 
 var ComponentConfig = require('/etc/yoda/component-config.json')
 
@@ -608,6 +609,128 @@ AppRuntime.prototype.openUrl = function (url, options) {
       skillId: skillId
     })
   )
+}
+
+/**
+ * handlePauseMusic
+ * date: 2019-4-11
+ */
+AppRuntime.prototype.PauseMusic = function PauseMusic () {
+  var appId = this.component.lifetime.getCurrentAppId()
+  mylogger.info(`CurrentAppId=${appId}`)
+  mylogger.info(`this.component.turen.isPlay=${this.component.turen.isPlay}`)
+  if (appId && _.endsWith(appId, 'cloudappclient', appId.length)) {
+    var status = this.component.appScheduler.getAppStatusById(appId)
+    mylogger.info(`status=${status}`)
+    var app = this.component.appScheduler.getAppById(appId)
+    mylogger.info(`app=${JSON.stringify(app)}`)
+    if (this.component.appScheduler.isAppRunning(appId)) {
+      this.component.light.play('@yoda', 'system://setMuted.js')
+        .then(() => {
+          if (!this.component.turen.isPlay) {
+            var nlp = { 'intent': 'resume', 'cloud': true, 'pattern': '($you)?($at)?($room)?($inside)?($resume)($sing)($you)?($justnow)?($de)?($keyword)?', 'slots': { 'resume': { 'pinyin': 'ji4 xu4', 'type': 'resume', 'value': '继续' }, 'sing': { 'pinyin': 'bo1 fang4', 'type': 'sing', 'value': '播放' } }, 'asr': '继续播放', 'appId': 'R233A4F187F34C94B93EE3BAECFCE2E3', 'appName': '音乐' }
+            var action = { 'version': '2.0.0', 'startWithActiveWord': false, 'appId': 'R233A4F187F34C94B93EE3BAECFCE2E3', 'session': {}, 'response': { 'action': { 'version': '2.0.0', 'type': 'NORMAL', 'form': 'scene', 'shouldEndSession': false, 'directives': [{ 'type': 'voice', 'action': 'STOP', 'disableEvent': false, 'noWait': false, 'item': { 'itemId': '57A272889E4C40DBB9CCC3B9B810C876' } }, { 'type': 'media', 'action': 'RESUME', 'disableEvent': false, 'noWait': false, 'disableSuppress': false, 'item': { 'offsetInMilliseconds': 0, 'playMultiple': 1 } }], 'voicePrint': { 'voicePrintId': '', 'voicePrintName': '' } }, 'resType': 'INTENT', 'respId': '30e8dfd56d6fa92c7bc7f3d3e618fcee' } }
+            mylogger.info(`resume`)
+            this.component.turen.isPlay = true
+            return this.component.lifetime.onLifeCycle(appId, 'request', [nlp, action, 'key_164'])
+              .catch(err => logger.warn('Unexpected error on resume app', err.stack))
+          } else if (this.component.turen.isPlay) {
+            mylogger.info(`pause`)
+            var nlp = { 'intent': 'pause', 'cloud': true, 'pattern': '($at)?($room)?($inside)?($pause)($play2)($keyword)?', 'slots': { 'play2': { 'pinyin': 'bo1 fang4', 'type': 'play2', 'value': '播放' }, 'pause': { 'pinyin': 'zan4 ting2', 'type': 'pause', 'value': '暂停' } }, 'asr': '暂停播放', 'appId': 'R233A4F187F34C94B93EE3BAECFCE2E3', 'appName': '音乐' }
+            var action = { 'version': '2.0.0', 'startWithActiveWord': false, 'appId': 'R233A4F187F34C94B93EE3BAECFCE2E3', 'session': {}, 'response': { 'action': { 'version': '2.0.0', 'type': 'NORMAL', 'form': 'scene', 'shouldEndSession': false, 'directives': [{ 'type': 'voice', 'action': 'STOP', 'disableEvent': false, 'noWait': false, 'item': { 'itemId': 'A5A0536F180741879759BC207A5153AE' } }, { 'type': 'media', 'action': 'PAUSE', 'disableEvent': false, 'noWait': false, 'disableSuppress': false, 'item': { 'offsetInMilliseconds': 0, 'playMultiple': 1 } }], 'voicePrint': { 'voicePrintId': '', 'voicePrintName': '' } }, 'resType': 'INTENT', 'respId': '13639fd34281d0874f5e08a1d79280d0' } }
+            this.component.turen.isPlay = false
+            return this.component.lifetime.onLifeCycle(appId, 'request', [nlp, action, 'key_164'])
+              .catch(err => logger.warn('Unexpected error on pause app', err.stack))
+          }
+        })
+    }
+  } else if (appId && _.endsWith(appId, 'bluetooth', appId.length)) {
+    if (this.component.appScheduler.isAppRunning(appId)) {
+      if (!this.component.turen.isPlay) {
+        mylogger.info(`resume`)
+        // this.component.lifetime.onLifeCycle(appId, 'audio_state_changed', ['A2DP_SINK', 'ON_PLAYING'])
+        this.component.turen.isPlay = true
+        return this.component.lifetime.onLifeCycle(appId, 'resume')
+          .catch(err => logger.warn('Unexpected error on resume app', err.stack))
+      } else if (this.component.turen.isPlay) {
+        mylogger.info(`pause`)
+        // this.component.lifetime.onLifeCycle(appId, 'audio_state_changed', ['A2DP_SINK', 'ON_PAUSED'])
+        this.component.turen.isPlay = false
+        return this.component.lifetime.onLifeCycle(appId, 'pause')
+          .catch(err => logger.warn('Unexpected error on pause app', err.stack))
+      }
+    }
+  }
+}
+
+/**
+ * handlePauseMusic
+ * date: 2019-4-15
+ */
+AppRuntime.prototype.BluetoothMusic = function BluetoothMusic (appId) {
+  mylogger.info(`CurrentAppId=${appId}`)
+  mylogger.info(`this.component.turen.isPlay=${this.component.turen.isPlay}`)
+  if (appId && _.endsWith(appId, 'bluetooth', appId.length)) {
+    if (this.component.appScheduler.isAppRunning(appId)) {
+      if (this.component.turen.isPlay) {
+        mylogger.info(`resume`)
+        // this.component.lifetime.onLifeCycle(appId, 'audio_state_changed', ['A2DP_SINK', 'ON_PLAYING'])
+        this.component.turen.isPlay = true
+        return this.component.lifetime.onLifeCycle(appId, 'resume')
+      } else if (!this.component.turen.isPlay) {
+        mylogger.info(`pause`)
+        // this.component.lifetime.onLifeCycle(appId, 'audio_state_changed', ['A2DP_SINK', 'ON_PAUSED'])
+        this.component.turen.isPlay = false
+        return this.component.lifetime.onLifeCycle(appId, 'pause')
+      }
+    }
+  }
+}
+
+/**
+ * setup flag to excute poweroff after 30 minutes
+ * @param {string} [voicedirective]
+ * @param {string} [mediadirective]
+ * @param {string} [cardtype]
+ * author:edong-gl
+ */
+AppRuntime.prototype.setPowerOffFlag = function setPowerOffFlag (voicedirective, mediadirective, cardtype) {
+  mylogger.info(`voicedirective=${voicedirective};mediadirective=${mediadirective};
+  cardtype=${cardtype}`)
+  if (voicedirective === 'PLAY' && mediadirective === 'PLAY') {
+    this.component.turen.isPlay = true
+    // this.component.turen.voice_pause_flag = false
+  } else if (voicedirective === 'PLAY' && mediadirective === 'PAUSE') {
+    if (typeof cardtype === 'string' && cardtype === 'chat') {
+      this.component.turen.isPlay = false
+      // this.component.turen.voice_pause_flag = true
+    } else {
+      this.component.turen.isPlay = true
+      this.component.turen.voice_pause_flag = false
+    }
+  } else if (voicedirective === 'STOP' && mediadirective === 'RESUME') {
+    this.component.turen.isPlay = true
+    // this.component.turen.voice_pause_flag = false
+  } else if (voicedirective === 'STOP' && mediadirective === 'PAUSE') {
+    this.component.turen.isPlay = false
+    // this.component.turen.voice_pause_flag = true
+  } else {
+    this.component.turen.isPlay = false
+    // this.component.turen.voice_pause_flag = false
+  }
+  mylogger.info(`current play status is:${this.component.turen.isPlay}`)
+  return Promise.resolve(this.component.turen.isPlay)
+}
+
+/**
+  * getPlayState
+  * @memberof yodaRT.activity.Activity.TurenClient
+  * @instance
+  * @function getPlayState
+  * @returns {Promise<boolean>}
+*/
+AppRuntime.prototype.getPlayState = function getPlayState () {
+  return Promise.resolve(this.component.turen.isPlay)
 }
 
 /**

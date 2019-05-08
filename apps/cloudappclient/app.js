@@ -6,6 +6,7 @@ var TtsEventHandle = require('@yodaos/ttskit').Convergence
 var MediaEventHandle = require('@yodaos/mediakit').Convergence
 var AudioMix = require('@yodaos/mediakit').AudioMix
 var logger = require('logger')('cloudAppClient')
+var mylogger = require('logger')('chenj-debug')
 var Skill = require('./skill')
 var _ = require('@yoda/util')._
 
@@ -302,12 +303,24 @@ module.exports = activity => {
 
   activity.on('pause', function () {
     logger.log(this.appId + ' paused')
+    if (arguments[0] === 'key_164') {
+      mylogger.info(`arguments=${JSON.stringify(arguments)}`)
+      sos.getCurrentSkill().key_164_pause = true
+      mylogger.info(`sos.Skill.paused=${sos.getCurrentSkill().key_164_pause}`)
+      mylogger.info(`sos.Skill.appId=${sos.getCurrentSkill().appId}`)
+    }
     needResume = true
     sos.pause()
   })
 
   activity.on('resume', function () {
     logger.log(this.appId + ' resumed')
+    if (arguments[0] === 'key_164') {
+      mylogger.info(`arguments=${JSON.stringify(arguments)}`)
+      sos.getCurrentSkill().key_164_pause = false
+      mylogger.info(`sos.Skill.paused=${sos.getCurrentSkill().key_164_pause}`)
+      mylogger.info(`sos.Skill.appId=${sos.getCurrentSkill().appId}`)
+    }
     if (needResume) {
       clearTimeout(taskTimerHandle)
       needResume = false
@@ -349,6 +362,22 @@ module.exports = activity => {
       return
     }
     logger.log(`${this.appId} app request`)
+    mylogger.log(`${this.appId} app nlp=${JSON.stringify(nlp)}`)
+    mylogger.log(`${this.appId} app action=${JSON.stringify(action)}`)
+    var directives = _.get(action, 'response.action.directives')
+    mylogger.log(`${this.appId} app action.response.action.directives=${JSON.stringify(directives)}`)
+    /**
+     * setup flag to excute poweroff after 30 minutes
+     */
+  
+    var cardtype = _.get(action, 'response.card.type', '')
+    mylogger.log(`response.card.type=${cardtype}`)
+    mylogger.log(`directives[1].action=${directives[1].action}`)
+    //mylogger.log(`activity.turen type is:${typeof activity.turen}`)
+    activity.turen.setPowerOffFlag(directives[0].action, directives[1].action, cardtype).then((isPlay) => {
+      mylogger.log(`AppRuntime.component.turen.isPlay=${isPlay}`)
+     })
+
     clearTimeout(taskTimerHandle)
     sos.onrequest(nlp, action)
   })

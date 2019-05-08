@@ -497,9 +497,15 @@ module.exports = function (activity) {
           a2dp.unmute()
         }, 100)
         lastIntent = 'derived_from_phone'
+        activity.turen.setPowerOffFlag('PLAY', 'PLAY').then((isPlay) => {
+          logger.log(`AppRuntime.component.turen.isPlay=${isPlay}`)
+        })
         break
       case protocol.AUDIO_STATE.PAUSED:
       case protocol.AUDIO_STATE.STOPPED:
+        activity.turen.setPowerOffFlag('STOP', 'PAUSE').then((isPlay) => {
+          logger.log(`AppRuntime.component.turen.isPlay=${isPlay}`)
+        })
         // NOP while pause/stop music according PRD.
         break
       case protocol.AUDIO_STATE.VOLUMN_CHANGED:
@@ -575,7 +581,14 @@ module.exports = function (activity) {
   }
 
   function resumeMusic () {
+    var audioState = a2dp.getAudioState()
     logger.debug(`needResume:${needResume})`)
+    logger.debug(`resumeMusic(now: ${audioState})`)
+    if (audioState === 'ON_STOPPED') {
+      needResume = false
+      a2dp.play()
+      return true
+    }
     if (needResume) {
       needResume = false
       a2dp.play()

@@ -3,6 +3,7 @@ var EventEmitter = require('events')
 var inherits = require('util').inherits
 
 var logger = require('logger')('la-vie')
+var mylogger = require('logger')('chenj-debug')
 var _ = require('@yoda/util')._
 
 /**
@@ -508,6 +509,11 @@ LaVieEnPile.prototype.recoverIfPossibleAfter = function recoverIfPossibleAfter (
        * Since last app is already on top of stack, no need to re-activate it,
        * a simple life cycle event is sufficient.
        */
+      if (_.endsWith(lastAppId, 'bluetooth', lastAppId.length)) {
+        mylogger.info('BluetoothMusic')
+        return this.scheduler.runtime.BluetoothMusic(lastAppId)
+          .catch(err => logger.warn('Unexpected error on bluetooth app', err.stack))
+      }
       return this.onLifeCycle(lastAppId, 'resume')
         .catch(err => logger.warn('Unexpected error on restoring previous app', err.stack))
     }

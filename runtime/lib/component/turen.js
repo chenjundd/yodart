@@ -56,6 +56,18 @@ function Turen (runtime) {
    * last wakeup degree
    */
   this.degree = 0
+  /**
+   * Counter
+   */
+  this.counter = 0
+  /**
+   * bluetooth/cloudappclient isPaly flag
+   */
+  this.isPlay = false
+  /**
+   * voice pause flag
+   */
+  // this.voice_pause_flag = false
 }
 
 /**
